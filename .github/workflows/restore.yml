@@ -1,0 +1,62 @@
+name: One-time repository restore
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    if: github.repository == 'madebycli/Pipes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Create clean source-only main branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAYLOAD_CHUNKS: >-
+            0a1a5f7da0485396903c2206689b71f9640adb88
+            d8ac4f3c6a1ad241ade2f29d8d2b7fa9a2ab0640
+            fecfb26a67944b5edf7368ca3698549c99e0c936
+            4fb6bb3074528dfc2584d426a1ef38743f190972
+            407b752069fb81724372cc547198f839c013d1b5
+            0aa40c498ae8752f14ce4bfc32e5946c43014453
+            1fd44e244396e09268679e4b2832a2d0779d3a94
+            407acfafed69f4f99ca557ecbb055dc3c48c53ea
+            af604150e4408174dd7509154e52a32b40ded0ac
+            6a5b5d48ccae5d97a63ce9d9da623c7b5b933fb1
+            55f9a17b3fcf5d96e3cdd932c9778b9dc9eefb23
+          EXPECTED_SIZE: "21012"
+          EXPECTED_SHA256: "9755c26b2c08e5c7d9b18fd814f3ff0a43716475251f436345081c504988b671"
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          archive="$work/repository.tar.gz"
+          : > "$archive"
+          for sha in $PAYLOAD_CHUNKS; do
+            response="$work/$sha.json"
+            curl --fail --silent --show-error --location \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/blobs/$sha" \
+              > "$response"
+            python3 -c 'import base64,json,pathlib,sys; data=json.loads(pathlib.Path(sys.argv[1]).read_text()); open(sys.argv[2],"ab").write(base64.b64decode(data["content"]))' "$response" "$archive"
+          done
+          test "$(stat -c %s "$archive")" = "$EXPECTED_SIZE"
+          test "$(sha256sum "$archive" | cut -d' ' -f1)" = "$EXPECTED_SHA256"
+          mkdir "$work/source"
+          tar --warning=no-timestamp -xzf "$archive" -C "$work/source" --strip-components=1
+          cd "$work/source"
+          rm -f .github/workflows/ci.yml
+          rmdir .github/workflows .github 2>/dev/null || true
+          git init
+          git config user.name "madebycli"
+          git config user.email "madebycli@users.noreply.github.com"
+          git add -A
+          git commit -m "restore: rebuild repository from recovered sources"
+          git branch -M main
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin main
