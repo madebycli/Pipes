@@ -43,10 +43,13 @@ jobs:
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "https://api.github.com/repos/$GITHUB_REPOSITORY/git/blobs/$sha" \
               > "$response"
-            python3 -c 'import base64,json,pathlib,sys; data=json.loads(pathlib.Path(sys.argv[1]).read_text()); open(sys.argv[2],"ab").write(base64.b64decode(data["content"]))' "$response" "$archive"
+            python3 -c 'import base64,json,pathlib,sys; data=json.loads(pathlib.Path(sys.argv[1]).read_text()); raw=base64.b64decode(data["content"]); open(sys.argv[2],"ab").write(raw); print(sys.argv[3], data["size"], len(raw))' "$response" "$archive" "$sha"
           done
-          test "$(stat -c %s "$archive")" = "$EXPECTED_SIZE"
-          test "$(sha256sum "$archive" | cut -d' ' -f1)" = "$EXPECTED_SHA256"
+          actual_size="$(stat -c %s "$archive")"
+          actual_sha="$(sha256sum "$archive" | cut -d' ' -f1)"
+          echo "assembled size=$actual_size sha256=$actual_sha"
+          test "$actual_size" = "$EXPECTED_SIZE"
+          test "$actual_sha" = "$EXPECTED_SHA256"
           mkdir "$work/source"
           tar --warning=no-timestamp -xzf "$archive" -C "$work/source" --strip-components=1
           cd "$work/source"
