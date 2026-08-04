@@ -1,49 +1,43 @@
-<div align="center">
-  <img src="assets/pipes-logo.svg" width="760" alt="Pipes — terminal screensaver in Python">
+<p align="center">
+  <img src="assets/readme-banner.svg" alt="Pipes — the classic terminal screensaver, rewired" width="100%">
+</p>
 
-  <p><strong>Animated terminal pipes. One Python file. Zero runtime dependencies.</strong></p>
+<p align="center">
+  <a href="https://github.com/madebycli/Pipes/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/madebycli/Pipes/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
+  <img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime-stdlib%20only-40e0d0">
+  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-2ea44f">
+</p>
 
-  <p>
-    <a href="https://github.com/madebycli/Pipes/actions/workflows/cross-distro.yml"><img alt="Cross-distribution CI" src="https://github.com/madebycli/Pipes/actions/workflows/cross-distro.yml/badge.svg?branch=main"></a>
-    <a href="https://github.com/madebycli/Pipes/actions/workflows/nix.yml"><img alt="Nix CI" src="https://github.com/madebycli/Pipes/actions/workflows/nix.yml/badge.svg?branch=main"></a>
-    <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
-    <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-2ea44f">
-  </p>
+<p align="center">
+  Animated terminal pipes with deterministic motion, rich color, and reliable cleanup.
+</p>
 
-  <p>
-    <a href="#quick-start">Quick start</a> ·
-    <a href="#install">Install</a> ·
-    <a href="#usage">Usage</a> ·
-    <a href="#development">Development</a> ·
-    <a href="#history-and-license">History</a>
-  </p>
-</div>
+**Pipes** is an independently maintained Python rewrite of the classic [`pipes.sh`](https://github.com/pipeseroni/pipes.sh) terminal screensaver. The familiar endless animation remains, while the runtime is rebuilt around a testable model, direct terminfo rendering, and one clean public command:
 
----
-
-**Pipes** is an unofficial, independently maintained Python rewrite of the classic
-[`pipes.sh`](https://github.com/pipeseroni/pipes.sh) terminal screensaver. It keeps
-the familiar animation and controls while using a deterministic, testable model,
-direct terminfo rendering, and reliable terminal cleanup.
-
-The installed command is intentionally just:
-
-```console
-$ pipes
+```bash
+pipes
 ```
-
-No `pipes.sh` executable alias is installed.
 
 ## Quick start
 
+Run with Nix:
+
 ```bash
-# Run directly from the checkout
-python3 pipes_sh.py
-
-# Nix
 nix run github:madebycli/Pipes
+```
 
-# After installing the wheel, Nix package, Arch package, or RPM
+Run directly from a checkout:
+
+```bash
+python3 pipes_sh.py
+```
+
+Install into the current Nix profile:
+
+```bash
+nix profile add github:madebycli/Pipes#pipes
+pipes --self-test
 pipes
 ```
 
@@ -51,133 +45,36 @@ Press any unassigned key to exit.
 
 ## Highlights
 
-- **Single-file runtime** — all application logic lives in `pipes_sh.py`.
-- **No runtime subprocesses** — no shell, `tput`, `stty`, network access, or persistent writes.
-- **Terminal-safe cleanup** — normal exit, signals, exceptions, and broken pipes restore the terminal.
-- **Deterministic mode** — `--seed` makes model behavior reproducible.
-- **Rich color support** — classic, 256-color, and direct-color indices through terminfo.
-- **Ten built-in styles** — plus repeatable custom 16-glyph transition sets.
-- **Cross-distribution packaging** — Python wheel, Nix, Arch Linux, and Fedora.
-- **Real PTY coverage** — signals, resize, echo handling, and complete termios restoration are tested.
-
-## Install
-
-### Nix / NixOS
-
-```bash
-nix run github:madebycli/Pipes
-nix profile add github:madebycli/Pipes
-pipes --self-test
-```
-
-#### Fish reports `Unknown command: pipes`
-
-First verify that the profile actually contains the executable:
-
-```fish
-nix profile list
-~/.nix-profile/bin/pipes --self-test
-```
-
-When the direct path works, the package is installed and the missing part is the
-user-profile directory in Fish's `PATH`. Add it once:
-
-```fish
-fish_add_path ~/.nix-profile/bin
-pipes --self-test
-```
-
-With Nix's XDG profile layout, use this path instead:
-
-```fish
-fish_add_path ~/.local/state/nix/profile/bin
-```
-
-Useful diagnostics:
-
-```fish
-command -v pipes
-string split : $PATH | string match '*nix*profile*bin*'
-ls -l ~/.nix-profile/bin/pipes ~/.local/state/nix/profile/bin/pipes 2>/dev/null
-```
-
-To remove the package, use the profile element name shown by `nix profile list`,
-for example:
-
-```bash
-nix profile remove Pipes
-```
-
-NixOS flake input:
-
-```nix
-{
-  inputs.pipes.url = "github:madebycli/Pipes";
-
-  outputs = { nixpkgs, pipes, ... }: {
-    nixosConfigurations.example = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ({ pkgs, ... }: {
-          environment.systemPackages = [
-            pipes.packages.${pkgs.system}.default
-          ];
-        })
-      ];
-    };
-  };
-}
-```
-
-### Python wheel
-
-```bash
-python3 -m build --wheel --no-isolation
-python3 -m pip install dist/*.whl
-pipes --version
-```
-
-The distribution is named `pipes-sh-python`; the installed executable is `pipes`.
-
-### Arch Linux
-
-```bash
-cd packaging/arch
-makepkg --syncdeps --cleanbuild
-sudo pacman -U ./pipes-sh-python-*.pkg.tar.zst
-```
-
-### Fedora
-
-The RPM spec is located at:
-
-```text
-packaging/fedora/pipes-sh-python.spec
-```
-
-The CI workflow builds, inspects, installs, imports, and self-tests the generated RPM.
+- Single-file Python runtime
+- No runtime subprocesses, shell commands, network access, or persistent files
+- Safe terminal restoration after normal exits, signals, errors, and broken pipes
+- Deterministic animation through `--seed`
+- Classic, 256-color, and direct-color terminal support
+- Ten built-in pipe styles plus custom 16-glyph transition sets
+- Live keyboard controls for speed, direction bias, color, and bold output
+- Nix, Python wheel, Arch Linux, and Fedora packaging
 
 ## Usage
 
 ```text
 pipes [OPTION]...
 
--p [1-]               number of pipes
--t [0-9]              built-in pipe type; repeatable
--t c[16 chars]        custom pipe type; repeatable
--c [color index]      decimal color index; repeatable
--c #[hex]             hexadecimal color index; repeatable
--f [20-100]           frame rate
--s [5-15]             straight probability denominator
--r [0-]               clear after N drawn characters; 0 disables
+-p N                  number of pipes
+-t 0-9                built-in pipe style; repeatable
+-t c[16 chars]        custom pipe style; repeatable
+-c INDEX              terminal color index; repeatable
+-c #[HEX]             hexadecimal color index; repeatable
+-f 20-100             frame rate
+-s 5-15               straight-line probability denominator
+-r N                  clear after N characters; 0 disables clearing
 -R                    random starting positions and directions
 -B                    disable bold
 -C                    disable color
--K                    keep color and type across edges
+-K                    keep type and color when crossing edges
+    --seed INTEGER    deterministic random seed
+    --self-test       run non-interactive integrity checks
+-v, --version         print the version
 -h, --help            show help
--v, --version         show version
---self-test           run non-interactive integrity checks
---seed INTEGER        deterministic random seed
 ```
 
 Examples:
@@ -189,56 +86,75 @@ pipes -c 33 -c 39 -c 45 -p 3
 pipes -t cMAYFORCEBWITHYOU --seed 42
 ```
 
-### Keyboard controls
+## Controls
 
 | Key | Action |
 |:---:|---|
-| `P` / `O` | Increase / decrease straight probability |
+| `P` / `O` | Increase / decrease straight-line tendency |
 | `F` / `D` | Increase / decrease frame rate |
-| `B` | Toggle bold immediately |
-| `C` | Toggle color immediately |
-| `K` | Toggle type/color retention across edges |
+| `B` | Toggle bold output |
+| `C` | Toggle color output |
+| `K` | Toggle style and color retention across edges |
 | any other key | Exit |
 
-## Pipe styles
+## Built-in styles
 
-| Type | Style | Transition characters |
-|---:|---|---|
-| `0` | Heavy box | `┃┏ ┓┛━┓  ┗┃┛┗ ┏━` |
-| `1` | Light arc | `│╭ ╮╯─╮  ╰│╯╰ ╭─` |
-| `2` | Light square | `│┌ ┐┘─┐  └│┘└ ┌─` |
-| `3` | Double box | `║╔ ╗╝═╗  ╚║╝╚ ╔═` |
-| `4` | ASCII plus | `\|+ ++-+  +\|++ +-` |
-| `5` | ASCII slash | `\|/ \\/-\\  \\|/\\ /-` |
-| `6` | Dots | `.. ....  .... ..` |
-| `7` | Dot / O | `.o oo.o  o.oo o.` |
-| `8` | Railway | `-\\ /\\\|/  /-\\/ \\|` |
-| `9` | Knobby | `╿┍ ┑┚╼┒  ┕╽┙┖ ┎╾` |
+| Type | Style |
+|---:|---|
+| `0` | Heavy box |
+| `1` | Light arc |
+| `2` | Light square |
+| `3` | Double box |
+| `4` | ASCII plus |
+| `5` | ASCII slash |
+| `6` | Dots |
+| `7` | Dot and O |
+| `8` | Railway |
+| `9` | Knobby |
 
-A custom type uses exactly 16 printable, single-cell Unicode codepoints:
+A custom style begins with `c` and contains exactly 16 printable, single-cell characters:
 
 ```bash
 pipes -t cMAYFORCEBWITHYOU
 ```
 
-The transition index is `old_direction * 4 + new_direction`; reverse turns are
-never generated.
+## NixOS
 
-## Architecture
+```nix
+{
+  inputs.pipes.url = "github:madebycli/Pipes";
 
-The runtime stays in one physical module but is divided into explicit layers:
-
-```text
-CLI parsing → deterministic Engine → FrameResult → Renderer → terminal
+  environment.systemPackages = [
+    inputs.pipes.packages.${pkgs.system}.pipes
+  ];
+}
 ```
 
-- `Engine` owns movement, wrapping, random state, types, colors, and reset counts.
-- `Renderer` converts immutable draw commands into one buffered write per frame.
-- `TerminalSession` owns termios, signal handlers, alternate-screen state, and cleanup.
-- `App` coordinates monotonic timing, input, resize, and rendering.
+The flake supports `x86_64-linux` and `aarch64-linux` and exports packages, apps, checks, and a development shell.
 
-Detailed hand-off documentation for maintainers and coding agents starts at
-[`ai-context/README.md`](ai-context/README.md).
+## Python wheel
+
+```bash
+python3 -m build --wheel --no-isolation
+python3 -m pip install dist/*.whl
+pipes --version
+```
+
+The distribution is named `pipes-sh-python`; the installed command is `pipes`.
+
+## Distribution packages
+
+### Arch Linux
+
+```bash
+cd packaging/arch
+makepkg --syncdeps --cleanbuild
+sudo pacman -U ./pipes-sh-python-*.pkg.tar.zst
+```
+
+### Fedora
+
+The RPM recipe is available at [`packaging/fedora/pipes-sh-python.spec`](packaging/fedora/pipes-sh-python.spec).
 
 ## Development
 
@@ -247,36 +163,14 @@ nix develop
 make test
 python3 scripts/benchmark.py
 python3 -m build --wheel --no-isolation
-nix flake check
+nix flake check --print-build-logs
+nix build .#pipes --print-build-logs
 ```
 
-The test matrix covers Python 3.10 and 3.13, deterministic model runs, exact reset
-ordering, wheel installation, PTY signal exits, resize to 1×1, echo disabling,
-full termios restoration, Nix, unprivileged Arch packaging, and Fedora RPMs.
+The automated test matrix covers deterministic model runs, rendering, resize behavior, signals, terminal mode restoration, wheel installation, Nix builds, Arch packages, and Fedora RPMs.
 
-## Naming and versioning
+## Origins and license
 
-- Public command: `pipes`
-- Python module: `pipes_sh`
-- Python / distro package: `pipes-sh-python`
-- Nix app: `pipes`
-- Man page: `pipes(6)`
+The original program was created by [Matthew Simpson](https://gist.github.com/msimpson/1096939), later developed by [Yu-Jie Lin](https://github.com/livibetter), and maintained by the [Pipeseroni contributors](https://github.com/pipeseroni/pipes.sh/graphs/contributors).
 
-Version **3.0.0** removes the old `pipes.sh` executable name. This is intentional:
-the project has one clear command and does not install a compatibility alias.
-Historical references to the original project remain credited as `pipes.sh`.
-
-## History and license
-
-The original program was created by
-[Matthew Simpson](https://gist.github.com/msimpson/1096939), later developed by
-[Yu-Jie Lin](https://github.com/livibetter), and maintained by the
-[Pipeseroni/pipes.sh contributors](https://github.com/pipeseroni/pipes.sh/graphs/contributors).
-
-This Python rewrite is independently maintained by
-[madebycli](https://github.com/madebycli) and is **not** an official Pipeseroni
-release.
-
-The historical MIT license and copyright notices are preserved unchanged in
-[`LICENSE`](LICENSE). The custom repository logo is part of this rewrite's
-documentation and does not replace or reattribute the original project's history.
+This rewrite is independently maintained by [`madebycli`](https://github.com/madebycli) and is not an official Pipeseroni release. The historical MIT license and copyright notices remain preserved in [`LICENSE`](LICENSE).
