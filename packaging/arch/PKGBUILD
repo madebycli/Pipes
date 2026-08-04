@@ -1,0 +1,32 @@
+# Maintainer: madebycli
+pkgname=pipes-sh-python
+pkgver=3.0.0
+pkgrel=1
+pkgdesc='Pipes terminal screensaver, independently rewritten in Python'
+arch=('any')
+url='https://github.com/madebycli/Pipes'
+license=('MIT')
+depends=('python' 'ncurses')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+provides=('pipes')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/madebycli/Pipes/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "Pipes-$pkgver"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "Pipes-$pkgver"
+  python -m compileall -q pipes_sh.py tests
+  python -m unittest discover -s tests -v
+  python pipes_sh.py --self-test
+  python -O pipes_sh.py --self-test
+}
+
+package() {
+  cd "Pipes-$pkgver"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
