@@ -5,9 +5,21 @@
   ncurses,
 }:
 
+let
+  versionLines = lib.splitString "\n" (builtins.readFile ../pipes_sh.py);
+  versionLine = lib.findFirst (
+    line: builtins.match "VERSION = \"([^\"]+)\"" line != null
+  ) null versionLines;
+  versionMatch =
+    if versionLine == null then
+      throw "Unable to read Pipes VERSION from pipes_sh.py"
+    else
+      builtins.match "VERSION = \"([^\"]+)\"" versionLine;
+  packageVersion = builtins.elemAt versionMatch 0;
+in
 stdenvNoCC.mkDerivation {
   pname = "pipes-sh-python";
-  version = "3.0.0";
+  version = packageVersion;
 
   src = lib.cleanSource ../.;
   strictDeps = true;
@@ -51,7 +63,7 @@ stdenvNoCC.mkDerivation {
 
     find "$out" -type f -exec sha256sum {} + | sort > "$TMPDIR/out-before"
     TERM=xterm-256color "$out/bin/pipes" --help >/dev/null
-    test "$(TERM=xterm-256color "$out/bin/pipes" --version)" = "pipes 3.0.0"
+    test "$(TERM=xterm-256color "$out/bin/pipes" --version)" = "pipes ${packageVersion}"
     TERM=xterm-256color "$out/bin/pipes" --self-test | grep -q '^pipes self-test: PASS$'
     TERM=xterm-256color TERMINFO_DIRS="${ncurses}/share/terminfo" \
       ${python3.interpreter} -O "$out/libexec/pipes/pipes_sh.py" --self-test \
