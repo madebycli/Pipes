@@ -58,7 +58,7 @@
 
           cli-smoke = pkgs.runCommand "pipes-cli-smoke" { nativeBuildInputs = [ package ]; } ''
             pipes --help >/dev/null
-            test "$(pipes --version)" = "pipes 3.0.0"
+            test "$(pipes --version)" = "pipes ${package.version}"
             pipes --self-test | grep -q '^pipes self-test: PASS$'
             grep -q '${pkgs.ncurses}/share/terminfo' ${package}/bin/pipes
             touch "$out"
